@@ -117,10 +117,13 @@ export default function LoginPage() {
 
       </div>
 
-      {/* Back link to Home */}
-      <Link href="wlc.pro.bd" className="mt-6 text-xs text-stone-500 hover:text-stone-300 transition-colors relative z-10 flex items-center gap-1">
-        ← Back to main site
-      </Link>
+     {/* Back link to Home */}
+<Link 
+  href="https://wlc.pro.bd" // 👈 🛠️ এখানে অবশ্যই https:// যুক্ত করতে হবে
+  className="mt-6 text-xs text-stone-500 hover:text-stone-300 transition-colors relative z-10 flex items-center gap-1"
+>
+  ← Back to main site
+</Link>
     </div>
   );
 }
