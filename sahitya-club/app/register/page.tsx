@@ -1,13 +1,16 @@
-// app/register/page.tsx
 "use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
+// ফায়ারবেস ফাংশন এবং আপনার তৈরি করা ফাইলটি ইমপোর্ট করুন
+import { db, storage } from "@/lib/firebase"; 
+import { collection, addDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function PanelRegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
-    position: "Executive",
+    position: "Executive Team", // অপশনের সাথে মিলানোর জন্য ডিফল্ট ভ্যালু ঠিক করা হলো
     email: "",
     number: "",
     whatsapp: "",
@@ -15,6 +18,7 @@ export default function PanelRegisterPage() {
   });
   const [profilePic, setProfilePic] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false); // লোডিং স্টেট
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -22,22 +26,41 @@ export default function PanelRegisterPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ফায়ারবেসে ডেটা পাঠানোর মূল ফাংশন
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("position", formData.position);
-    data.append("email", formData.email);
-    data.append("number", formData.number);
-    data.append("whatsapp", formData.whatsapp);
-    data.append("batch", formData.batch);
-    if (profilePic) {
-      data.append("profilePic", profilePic);
-    }
+    try {
+      let imageUrl = "";
 
-    console.log("Submitting Panel Request...");
-    setSubmitted(true);
+      // ১. যদি ইউজার ছবি আপলোড করে, তবে সেটা Firebase Storage-এ আপলোড হবে
+      if (profilePic) {
+        const storageRef = ref(storage, `panel_avatars/${Date.now()}_${profilePic.name}`);
+        const uploadResult = await uploadBytes(storageRef, profilePic);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      }
+
+      // ২. সব তথ্যসহ Firestore ডেটাবেজে একটি নতুন ডকুমেন্ট তৈরি হবে
+      await addDoc(collection(db, "panel_requests"), {
+        name: formData.name,
+        position: formData.position,
+        email: formData.email,
+        number: formData.number,
+        whatsapp: formData.whatsapp,
+        batch: formData.batch,
+        profilePicUrl: imageUrl, // ইমেজের লাইভ ইউআরএল
+        status: "pending", // অ্যাডমিন প্যানেল থেকে অ্যাপ্রুভ করার জন্য ডিফল্ট স্ট্যাটাস
+        createdAt: new Date().toISOString(),
+      });
+
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Firebase Submission Error:", error);
+      alert("কোথাও একটা সমস্যা হয়েছে! আবার চেষ্টা করুন।");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,7 +77,7 @@ export default function PanelRegisterPage() {
             Internal Access Only
           </div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-stone-100 to-stone-400 bg-clip-text text-transparent">
-            অফিশিয়াল প্যানেল পোর্টাল
+            অফিশিয়াল প্যানেল পোর্টাল
           </h1>
           <p className="text-stone-500 text-xs mt-1.5 tracking-wide uppercase font-medium">
             Willes Literary Club • ড্যাশবোর্ড অ্যাকাউন্ট তৈরি
@@ -66,9 +89,9 @@ export default function PanelRegisterPage() {
             <div className="w-16 h-16 bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
               ✓
             </div>
-            <h2 className="text-xl font-bold text-stone-200">আবেদন জমা হয়েছে!</h2>
+            <h2 className="text-xl font-bold text-stone-200">আবেদন জমা হয়েছে!</h2>
             <p className="text-stone-400 text-sm mt-2 max-w-sm mx-auto">
-              আপনার প্যানেল রিকোয়েস্টটি পাঠানো হয়েছে। অ্যাডমিন অ্যাপ্রুভ করলে আপনার ড্যাশবোর্ড অ্যাক্সেস চালু হয়ে যাবে।
+              আপনার প্যানেল রিকোয়েস্টটি পাঠানো হয়েছে। অ্যাডমিন অ্যাপ্রুভ করলে আপনার ড্যাশবোর্ড অ্যাক্সেস চালু হয়ে যাবে।
             </p>
             <Link
               href="/"
@@ -129,7 +152,7 @@ export default function PanelRegisterPage() {
               </div>
             </div>
 
-            {/* ৪. অফিশিয়াল ইমেইল (Email) */}
+            {/* ৪. অফিশিয়াল ইমেইল (Email) */}
             <div>
               <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
                 Official Email Address
@@ -197,12 +220,13 @@ export default function PanelRegisterPage() {
               </div>
             </div>
 
-            {/* সাবমিট বাটন */}
+            {/* সাবমিট বাটন (লোডিং স্টেটসহ) */}
             <button
               type="submit"
-              className="w-full mt-2 bg-gradient-to-r from-stone-100 to-stone-300 hover:from-stone-200 hover:to-stone-400 text-stone-950 font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99]"
+              disabled={loading}
+              className="w-full mt-2 bg-gradient-to-r from-stone-100 to-stone-300 hover:from-stone-200 hover:to-stone-400 text-stone-950 font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Request Panel Access ➔
+              {loading ? "Submitting Request..." : "Request Panel Access ➔"}
             </button>
           </form>
         )}
