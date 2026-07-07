@@ -12,7 +12,6 @@ const hindSiliguri = Hind_Siliguri({
 export const metadata: Metadata = {
   title: "উইল্‌স সাহিত্য ক্লাব - প্যানেল ড্যাশবোর্ড",
   description: "উইল্‌স লিটল ফ্লাওয়ার স্কুল অ্যান্ড কলেজের অফিশিয়াল সাহিত্য ক্লাব ইন্টারনাল প্যানেল।",
-  // 🚫 সার্চ ইঞ্জিন ক্রলিং এবং ইনডেক্সিং ব্লক করার জন্য:
   robots: {
     index: false,
     follow: false,
@@ -26,10 +25,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  popup, // 👈 প্যারালাল রুট স্লট প্রপ্স
 }: {
   children: React.ReactNode;
-  popup: React.ReactNode; 
 }) {
   return (
     <html lang="bn" className="h-full">
@@ -39,9 +36,6 @@ export default function RootLayout({
         <main className="flex-grow w-full block relative z-10">
           {children}
         </main>
-
-        {/* 👈 পপ-আপ স্লট রেন্ডার */}
-        {popup} 
 
       </body>
     </html>
