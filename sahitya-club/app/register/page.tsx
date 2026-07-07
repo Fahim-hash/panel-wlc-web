@@ -1,73 +1,223 @@
 // app/register/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
+import React, { useState } from "react";
+import Link from "next/link";
 
-export default function RegisterPage() {
-  const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/1FfHREivkfK2dncPiuw1hGALNmvw3bysmzY05uEWOgQ4/viewform";
-  const [timeLeft, setTimeLeft] = useState(3); // ৩ সেকেন্ড কাউন্টডাউন
+export default function PanelRegisterPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    position: "Executive",
+    email: "",
+    number: "",
+    whatsapp: "",
+    batch: "",
+  });
+  const [profilePic, setProfilePic] = useState<File | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
-  useEffect(() => {
-    // ১. টাইমার কাউন্টডাউন লজিক
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 1 ? prev - 1 : 0));
-    }, 1000);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProfilePic(e.target.files[0]);
+    }
+  };
 
-    // ২. ৩ সেকেন্ড পর অটোমেটিক রিডাইরেক্ট লজিক
-    const redirectTimeout = setTimeout(() => {
-      window.location.href = GOOGLE_FORM_URL;
-    }, 3000);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const data = new FormData();
+    data.append("name", formData.name);
+    data.append("position", formData.position);
+    data.append("email", formData.email);
+    data.append("number", formData.number);
+    data.append("whatsapp", formData.whatsapp);
+    data.append("batch", formData.batch);
+    if (profilePic) {
+      data.append("profilePic", profilePic);
+    }
 
-    return () => {
-      clearInterval(timer);
-      clearTimeout(redirectTimeout);
-    };
-  }, []);
+    console.log("Submitting Panel Request...");
+    setSubmitted(true);
+  };
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA] text-stone-800 font-sans py-16 px-4 flex items-center justify-center">
-      <div className="w-full max-w-md bg-white border border-stone-200/80 rounded-3xl shadow-xl p-8 md:p-10 relative overflow-hidden text-center animate-fade-in">
+    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
+      
+      {/* ব্যাকগ্রাউন্ড গ্লো ইফেক্ট */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-rose-900/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-lg bg-stone-900/40 backdrop-blur-md border border-stone-800/80 p-8 rounded-2xl shadow-2xl relative z-10">
         
-        {/* টপ প্রিমিয়াম টপ-বার */}
-        <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-800 via-rose-600 to-amber-500"></div>
-
-        {/* লোগো সেকশন */}
-        <div className="relative w-20 h-20 mx-auto mb-6">
-          <Image src="/logo.png" alt="WLC Logo" fill className="object-contain" priority />
-        </div>
-
-        {/* লোডিং ও রিডাইরেক্ট টেক্সট */}
-        <h1 className="text-xl md:text-2xl font-bold font-serif text-stone-900 mb-2">
-          নিবন্ধন ফরমে নিয়ে যাওয়া হচ্ছে
-        </h1>
-        
-        <p className="text-sm text-stone-500 mb-6">
-          আপনাকে অফিশিয়াল গুগল ফর্মে রিডাইরেক্ট করা হচ্ছে। দয়া করে একটু অপেক্ষা করুন...
-        </p>
-
-        {/* ⏳ ডাইনামিক স্পিনার ও টাইমার */}
-        <div className="flex flex-col items-center justify-center gap-3 mb-8">
-          <div className="w-10 h-10 border-4 border-stone-100 border-t-rose-800 rounded-full animate-spin"></div>
-          <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">
-            {timeLeft > 0 ? `${timeLeft} সেকেন্ড বাকি` : "প্রবেশ করা হচ্ছে..."}
-          </span>
-        </div>
-
-        {/* সেফটি ম্যানুয়াল বাটন */}
-        <div className="border-t border-stone-100 pt-6">
-          <p className="text-[11px] text-stone-400 mb-3">
-            স্বয়ংক্রিয়ভাবে ফর্মটি ওপেন না হলে নিচের বাটনে ক্লিক করুন:
+        {/* প্যানেল পোর্টাল হেডার */}
+        <div className="text-center mb-8">
+          <div className="inline-block bg-stone-800/60 border border-stone-700/50 text-stone-400 text-[10px] tracking-widest uppercase font-semibold px-2.5 py-1 rounded-md mb-3">
+            Internal Access Only
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-stone-100 to-stone-400 bg-clip-text text-transparent">
+            অফিশিয়াল প্যানেল পোর্টাল
+          </h1>
+          <p className="text-stone-500 text-xs mt-1.5 tracking-wide uppercase font-medium">
+            Willes Literary Club • ড্যাশবোর্ড অ্যাকাউন্ট তৈরি
           </p>
-          <a
-            href={GOOGLE_FORM_URL}
-            className="inline-flex items-center justify-center gap-2 w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 px-4 rounded-xl text-xs transition-all shadow-sm"
+        </div>
+
+        {submitted ? (
+          <div className="text-center py-8 animate-fade-in">
+            <div className="w-16 h-16 bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+              ✓
+            </div>
+            <h2 className="text-xl font-bold text-stone-200">আবেদন জমা হয়েছে!</h2>
+            <p className="text-stone-400 text-sm mt-2 max-w-sm mx-auto">
+              আপনার প্যানেল রিকোয়েস্টটি পাঠানো হয়েছে। অ্যাডমিন অ্যাপ্রুভ করলে আপনার ড্যাশবোর্ড অ্যাক্সেস চালু হয়ে যাবে।
+            </p>
+            <Link
+              href="/"
+              className="mt-6 inline-block text-xs bg-stone-800 hover:bg-stone-700 text-stone-200 px-4 py-2 rounded-xl transition-all border border-stone-700"
+            >
+              Panel Login
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            
+            {/* ১. নাম (Name) */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                required
+                className="w-full bg-stone-950/60 border border-stone-800 focus:border-rose-900/60 rounded-xl px-4 py-3 text-sm text-stone-100 placeholder-stone-600 focus:outline-none transition-colors"
+                placeholder="Syed Fahim"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* ২. প্যানেল পজিশন (Position) */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                  Panel Designation
+                </label>
+                <select
+                  className="w-full bg-stone-950/60 border border-stone-800 focus:border-rose-900/60 rounded-xl px-3 py-3 text-sm text-stone-100 focus:outline-none transition-colors"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                >
+                  <option value="Executive Team">Executive Team</option>
+                  <option value="Moderator Panel">Moderator Panel</option>
+                  <option value="Advisory Board">Advisory Board</option>
+                  <option value="Administrator">Administrator</option>
+                </select>
+              </div>
+
+              {/* ৩. ব্যাচ (Batch) */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                  Batch
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full bg-stone-950/60 border border-stone-800 focus:border-rose-900/60 rounded-xl px-4 py-3 text-sm text-stone-100 placeholder-stone-600 focus:outline-none transition-colors"
+                  placeholder="HSC '26"
+                  value={formData.batch}
+                  onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* ৪. অফিশিয়াল ইমেইল (Email) */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                Official Email Address
+              </label>
+              <input
+                type="email"
+                required
+                className="w-full bg-stone-950/60 border border-stone-800 focus:border-rose-900/60 rounded-xl px-4 py-3 text-sm text-stone-100 placeholder-stone-600 focus:outline-none transition-colors"
+                placeholder="official@wlc.pro.bd"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* ৫. কন্ট্যাক্ট নাম্বার (Number) */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                  Contact Number
+                </label>
+                <input
+                  type="tel"
+                  required
+                  className="w-full bg-stone-950/60 border border-stone-800 focus:border-rose-900/60 rounded-xl px-4 py-3 text-sm text-stone-100 placeholder-stone-600 focus:outline-none transition-colors"
+                  placeholder="01XXXXXXXXX"
+                  value={formData.number}
+                  onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                />
+              </div>
+
+              {/* ৬. হোয়াটসঅ্যাপ (WhatsApp) */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                  WhatsApp Number
+                </label>
+                <input
+                  type="tel"
+                  required
+                  className="w-full bg-stone-950/60 border border-stone-800 focus:border-rose-900/60 rounded-xl px-4 py-3 text-sm text-stone-100 placeholder-stone-600 focus:outline-none transition-colors"
+                  placeholder="01XXXXXXXXX"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* ৭. প্রোফাইল ছবি (Profile Pic) */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
+                Official Avatar / Photo <span className="text-stone-600 font-normal">(Optional)</span>
+              </label>
+              <div className="relative w-full bg-stone-950/60 border border-stone-800 hover:border-stone-700 rounded-xl px-4 py-3 text-sm transition-colors flex items-center justify-between cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                  onChange={handleFileChange}
+                />
+                <span className="text-stone-500 text-xs truncate max-w-[250px]">
+                  {profilePic ? profilePic.name : "Upload official image..."}
+                </span>
+                <span className="text-xs bg-stone-800 text-stone-300 px-2.5 py-1 rounded-md border border-stone-700 relative z-10">
+                  Browse
+                </span>
+              </div>
+            </div>
+
+            {/* সাবমিট বাটন */}
+            <button
+              type="submit"
+              className="w-full mt-2 bg-gradient-to-r from-stone-100 to-stone-300 hover:from-stone-200 hover:to-stone-400 text-stone-950 font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-md hover:scale-[1.01] active:scale-[0.99]"
+            >
+              Request Panel Access ➔
+            </button>
+          </form>
+        )}
+
+        {/* ব্যাক লিংক */}
+        <div className="flex justify-center mt-6">
+          <Link
+            href="/"
+            className="text-xs text-stone-600 hover:text-stone-400 transition-colors flex items-center gap-1"
           >
-            সরাসরি ফর্মে যান ➔
-          </a>
+            ← Panel Login
+          </Link>
         </div>
 
       </div>
-    </main>
+    </div>
   );
 }
