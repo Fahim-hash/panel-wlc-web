@@ -43,10 +43,10 @@ export default function LoginPage() {
             />
           </div>
           <h1 className="text-xl font-bold text-white tracking-tight">
-            WLC Internal Panel
+            WLC Internal Panel Portal
           </h1>
           <p className="text-xs text-stone-400 mt-1">
-            Experiment & Subdomain Management Environment
+            Club Management System
           </p>
         </div>
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
         {/* 🔒 Footer Security Note */}
         <div className="mt-6 pt-4 border-t border-stone-900 text-center">
           <p className="text-[10px] text-stone-500 font-mono tracking-tight">
-            SECURE SANDBOX ENVIRONMENT &bull; CORS ACTIVE
+            SECURE SANDBOX ENVIRONMENT
           </p>
         </div>
 
