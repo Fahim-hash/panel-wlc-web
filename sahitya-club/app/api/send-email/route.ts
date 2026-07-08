@@ -2,8 +2,8 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-// সরাসরি সোর্স কোডেই এপিআই কি বসানো হলো
-const resend = new ('re_SNiDeURm_72PpnQs35xQ7y2wmfy9KmbXa');
+// সরাসরি সোর্স কোডেই এপিআই কি বসানো হলো (সঠিক নিয়মে ক্লাসের নাম দিয়ে ইনস্ট্যান্স তৈরি করা হয়েছে)
+const resend = new Resend('re_SNiDeURm_72PpnQs35xQ7y2wmfy9KmbXa');
 
 
 export async function POST(request: Request) {
