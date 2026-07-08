@@ -26,7 +26,7 @@ export default function LoginPage() {
     console.log("🔍 Attempting login for:", cleanEmail);
 
     try {
-      // 🔑 Firestore থেকে ইউজার খোঁজা
+      // 🔑 Firestore থেকে 'approved' মেম্বার খোঁজার কুয়েরি
       const q = query(
         collection(db, "panel_requests"),
         where("email", "==", cleanEmail),
@@ -40,15 +40,18 @@ export default function LoginPage() {
         console.log("✅ User found in Firestore!");
         const memberDoc = querySnapshot.docs[0].data();
 
-        // 💾 সেশন ডাটা স্টোর
-        localStorage.setItem("userRole", memberDoc.position || ""); 
-        localStorage.setItem("userName", memberDoc.name || "");
-        localStorage.setItem("userEmail", memberDoc.email || "");
-        
-        const pagesArray = memberDoc.allowedPages || [];
-        localStorage.setItem("allowedPages", JSON.stringify(pagesArray));
+        // 🎯 ড্যাশবোর্ডের স্ট্রাকচার অনুযায়ী 'userSession' অবজেক্ট তৈরি
+        const sessionData = {
+          name: memberDoc.name || "",
+          email: memberDoc.email || "",
+          position: memberDoc.position || "",
+          allowedPages: memberDoc.allowedPages || [] // ডাইনামিক পারমিশন অ্যারে
+        };
 
-        // 🔥 ট্রিক: router.push এর বদলে হার্ড রিডাইরেক্ট করছি যাতে মিডলওয়্যার সাথে সাথে সেশন পায়
+        // 💾 ড্যাশবোর্ড ঠিক যেভাবে ডাটা চায়—সেভাবে একটি সিঙ্গেল কি-তে অবজেক্টটি পুশ করা হলো
+        localStorage.setItem("userSession", JSON.stringify(sessionData));
+
+        // 🔥 হার্ড রিডাইরেক্ট করছি যাতে সেশন স্টেটটি নেক্সটজেএস ক্লায়েন্ট রাউটার সঙ্গে সঙ্গে ডিটেক্ট করতে পারে
         window.location.href = "/dashboard";
       } else {
         console.warn("❌ No matching approved user found.");
