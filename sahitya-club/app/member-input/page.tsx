@@ -69,24 +69,31 @@ export default function MemberInputPage() {
     };
 
     try {
-      // ⚠️ এখানে আপনার Google Sheet API বা SheetDB এন্ডপয়েন্ট ইউআরএল বসাবেন ভাই
-      const response = await fetch("/api/save-to-excel-placeholder", {
+      // 🚀 আপনার লাইভ SheetDB এপিআই লিংক দিয়ে ফিক্স করা হলো
+      const response = await fetch("https://sheetdb.io/api/v1/g5ekqy0wxn9lp", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataToSend),
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        // SheetDB-এর রুলস অনুযায়ী ডেটা 'data' কি-এর ভেতর অবজেক্ট আকারে পাঠানো হলো
+        body: JSON.stringify({ data: dataToSend }),
       });
 
-      console.log("Excel Sheet Data Payload:", dataToSend);
-      
+      if (!response.ok) {
+        throw new Error("Failed to save data to SheetDB");
+      }
+
+      console.log("Excel Sheet Data Payload successfully pushed:", dataToSend);
+
       setGeneratedId(clubId);
-      setSuccessMessage("মেম্বার ডাটা সফলভাবে এক্সেল শিটে সেভ করা হয়েছে ভাই!");
-      
+      setSuccessMessage("মেম্বার ডাটা সফলভাবে গুগল শিটে সেভ করা হয়েছে ভাই!");
+
       // শুধুমাত্র নাম, ফোন, ইমেইল ক্লিয়ার হবে; ক্লাস/ভার্সন/জেনারেশন আগেরটাই থাকবে দ্রুত এন্ট্রির জন্য
       setFormData({ ...formData, name: "", phone: "", email: "" });
 
     } catch (error) {
       console.error("Submission error:", error);
-      alert("ডাটা সেভ করতে সমস্যা হয়েছে ভাই।");
+      alert("ডাটা সেভ করতে সমস্যা হয়েছে ভাই। গুগল শিটের হেডার রো চেক করুন।");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +103,7 @@ export default function MemberInputPage() {
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 p-6 md:p-12 selection:bg-rose-500 selection:text-white">
-      
+
       {/* নেভিগেশন হেডার */}
       <div className="max-w-xl mx-auto flex justify-between items-center mb-10 border-b border-stone-900 pb-5">
         <Link href="/dashboard" className="text-xs text-stone-400 hover:text-white transition-colors flex items-center gap-1.5">
@@ -130,7 +137,7 @@ export default function MemberInputPage() {
 
         {/* এন্ট্রি ফর্ম */}
         <form onSubmit={handleSubmit} className="space-y-5 bg-stone-900/40 border border-stone-900 p-6 rounded-2xl">
-          
+
           <div>
             <label className="block text-xs font-semibold text-stone-400 mb-2 uppercase tracking-wide">Full Name</label>
             <input
@@ -184,7 +191,6 @@ export default function MemberInputPage() {
                 <option value="Class 10">Class 10</option>
                 <option value="College 1st Year">College 1st Year</option>
                 <option value="College 2nd Year">College 2nd Year</option>
-                
               </select>
             </div>
 
@@ -211,9 +217,7 @@ export default function MemberInputPage() {
               onChange={(e) => setFormData({ ...formData, generation: e.target.value })}
               className="w-full px-4 py-3 bg-stone-950 border border-stone-800 rounded-xl text-xs text-white focus:outline-none focus:border-rose-900 transition-all"
             >
-              
               <option value="3">Generation 3 (WL3xxx)</option>
-              
             </select>
           </div>
 
