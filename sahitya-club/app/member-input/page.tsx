@@ -21,9 +21,9 @@ export default function MemberInputPage() {
     name: "",
     phone: "",
     email: "",
-    classLevel: "Class 10", // ডিফল্ট ক্লাস
-    version: "Bangla Version", // ডিফল্ট ভার্সন
-    generation: "3", // ডিফল্ট জেনারেশন ৩
+    classLevel: "Class 10",
+    version: "Bangla Version",
+    generation: "3",
   });
 
   // সিকিউরিটি ও পারমিশন চেক
@@ -42,11 +42,32 @@ export default function MemberInputPage() {
     }
   }, [router]);
 
-  // 🎯 মেম্বার আইডি জেনারেটর (WL + Generation + 3 Digit Number)
-  const generateUniqueClubId = (selectedGen: string) => {
-    // ৩ ডিজিটের ইউনিক মেম্বার নাম্বার (001 থেকে 999)
-    const memberSequence = Math.floor(1 + Math.random() * 999).toString().padStart(3, "0");
-    return `WL${selectedGen}${memberSequence}`;
+  // 🎯 সিরিয়াল অনুযায়ী ইউনিক আইডি জেনারেটর (SheetDB থেকে লেটেস্ট ডাটা চেক করবে)
+  const getNextSerialClubId = async (selectedGen: string) => {
+    try {
+      // গুগল শিট থেকে শেষ ১০টি ডাটা রিড করার ট্রাই করছি (আইডি খোঁজার জন্য)
+      const res = await fetch("https://sheetdb.io/api/v1/g5ekqy0wxn9lp?limit=10&sort_by=clubId&sort_order=desc");
+      if (res.ok) {
+        const data = await res.json();
+        
+        if (data && data.length > 0 && data[0].clubId) {
+          // শেষ যে আইডিটা আছে (যেমন: WL3005) সেটা থেকে শুধু লাস্টের ৩ ডিজিট নাম্বারটা নিব
+          const lastIdStr = data[0].clubId; // "WL3005"
+          const lastNumberStr = lastIdStr.replace(`WL${selectedGen}`, ""); // "005"
+          const lastNumber = parseInt(lastNumberStr, 10);
+
+          if (!isNaN(lastNumber)) {
+            const nextNumber = (lastNumber + 1).toString().padStart(3, "0"); // "006"
+            return `WL${selectedGen}${nextNumber}`;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching sequence, falling back to 001:", err);
+    }
+    
+    // যদি শিট একদম খালি থাকে বা কোনো আইডি না পায়, তাহলে সিরিয়াল শুরু হবে 001 থেকে
+    return `WL${selectedGen}001`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,27 +76,27 @@ export default function MemberInputPage() {
     setSuccessMessage("");
     setGeneratedId("");
 
-    const clubId = generateUniqueClubId(formData.generation);
-
-    // এক্সেল/গুগল শিটে সেভ করার জন্য ডেটা অবজেক্ট
-    const dataToSend = {
-      name: formData.name,
-      phone: formData.phone,
-      email: formData.email,
-      class: formData.classLevel,
-      version: formData.version,
-      clubId: clubId,
-      timestamp: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
-    };
-
     try {
-      // 🚀 আপনার লাইভ SheetDB এপিআই লিংক দিয়ে ফিক্স করা হলো
+      // ১. লাইভ গুগল শিট থেকে চেক করে একদম ফ্রেশ নেক্সট সিরিয়াল আইডি নিয়ে আসা
+      const clubId = await getNextSerialClubId(formData.generation);
+
+      // ২. গুগল শিটের কলামের নাম অনুযায়ী অবজেক্ট তৈরি
+      const dataToSend = {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        class: formData.classLevel,
+        version: formData.version,
+        clubId: clubId,
+        timestamp: new Date().toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
+      };
+
+      // ৩. SheetDB-তে ডাটা পুশ
       const response = await fetch("https://sheetdb.io/api/v1/g5ekqy0wxn9lp", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json" 
         },
-        // SheetDB-এর রুলস অনুযায়ী ডেটা 'data' কি-এর ভেতর অবজেক্ট আকারে পাঠানো হলো
         body: JSON.stringify({ data: dataToSend }),
       });
 
@@ -83,17 +104,17 @@ export default function MemberInputPage() {
         throw new Error("Failed to save data to SheetDB");
       }
 
-      console.log("Excel Sheet Data Payload successfully pushed:", dataToSend);
+      console.log("Data pushed with Serial ID:", clubId);
 
       setGeneratedId(clubId);
-      setSuccessMessage("মেম্বার ডাটা সফলভাবে গুগল শিটে সেভ করা হয়েছে ভাই!");
+      setSuccessMessage(`মেম্বার ডাটা সফলভাবে সিরিয়াল অনুযায়ী সেভ করা হয়েছে ভাই!`);
 
-      // শুধুমাত্র নাম, ফোন, ইমেইল ক্লিয়ার হবে; ক্লাস/ভার্সন/জেনারেশন আগেরটাই থাকবে দ্রুত এন্ট্রির জন্য
+      // ফর্ম রিলিজ (নাম, ফোন, ইমেইল ক্লিয়ার হবে)
       setFormData({ ...formData, name: "", phone: "", email: "" });
 
     } catch (error) {
       console.error("Submission error:", error);
-      alert("ডাটা সেভ করতে সমস্যা হয়েছে ভাই। গুগল শিটের হেডার রো চেক করুন।");
+      alert("ডাটা সেভ করতে বা সিরিয়াল আইডি জেনারেট করতে সমস্যা হয়েছে ভাই।");
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +138,7 @@ export default function MemberInputPage() {
       <div className="max-w-xl mx-auto">
         <div className="mb-6">
           <h1 className="text-lg font-bold tracking-tight text-white">ম্যানুয়াল মেম্বার ডাটা এন্ট্রি</h1>
-          <p className="text-xs text-stone-500 mt-1">নতুন মেম্বার যুক্ত করুন। আইডি ফরম্যাট হবে: <span className="font-mono text-stone-300">WL[Gen][Number]</span> (যেমন: WL3001)</p>
+          <p className="text-xs text-stone-500 mt-1">নতুন মেম্বার যুক্ত করুন। আইডি ফরম্যাট অটোমেটিক সিরিয়াল হবে: <span className="font-mono text-stone-300">WL[Gen][Serial]</span> (যেমন: WL3001, WL3002)</p>
         </div>
 
         {/* সাকসেস নোটিফিকেশন */}
@@ -126,7 +147,7 @@ export default function MemberInputPage() {
             <p className="text-xs text-emerald-400 font-medium">{successMessage}</p>
             {generatedId && (
               <div className="mt-3 pt-3 border-t border-stone-800 flex justify-between items-center">
-                <span className="text-[10px] uppercase text-stone-500 font-mono">Generated ID:</span>
+                <span className="text-[10px] uppercase text-stone-500 font-mono">Generated Serial ID:</span>
                 <span className="text-xs font-mono font-bold text-emerald-400 bg-stone-950 px-3 py-1 border border-emerald-900/30 rounded-md tracking-wider">
                   {generatedId}
                 </span>
@@ -226,7 +247,7 @@ export default function MemberInputPage() {
             disabled={isLoading}
             className="w-full py-3 mt-2 bg-stone-100 hover:bg-white text-stone-950 font-bold text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-40 flex items-center justify-center gap-2 shadow-lg shadow-black/40"
           >
-            {isLoading ? "Pushing to Sheet..." : "Generate ID & Push to Sheet ➔"}
+            {isLoading ? "Checking Serial & Pushing..." : "Generate Next Serial ID & Push ➔"}
           </button>
 
         </form>
