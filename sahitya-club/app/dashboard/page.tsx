@@ -1,88 +1,199 @@
-// app/dashboard/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-// ৪টি আলাদা রোলের জন্য ৪টি সাব-কম্পোনেন্ট নিচে ডিফাইন করা হয়েছে
-import AdminView from "./views/AdminView";
-import ModeratorView from "./views/ModeratorView";
-import EditorialView from "./views/EditorialView";
-import ExecutiveView from "./views/ExecutiveView";
-
-type Role = "Admin" | "Moderator" | "Editorial" | "Executive";
+interface UserSession {
+  name: string;
+  email: string;
+  position: string;
+  allowedPages?: string[];
+}
 
 export default function DashboardPage() {
-  // বাস্তব প্রজেক্টে এই রোলটি ফায়ারবেস বা লোকালস্টোরেজ থেকে রিড হবে
-  // আপাতত টেস্ট করার জন্য আমরা একটি স্টেট নিচ্ছি যাতে সহজেই সুইচ করে দেখা যায়
-  const [userRole, setUserRole] = useState<Role>("Admin");
-  const [userName, setUserName] = useState("Syed Fahim");
+  const [user, setUser] = useState<UserSession | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const sessionData = localStorage.getItem("userSession");
+    if (!sessionData) {
+      router.push("/");
+    } else {
+      setUser(JSON.parse(sessionData));
+    }
+  }, [router]);
+
+  if (!user) return <div className="min-h-screen bg-stone-950 flex items-center justify-center text-xs text-stone-500">Loading Dashboard...</div>;
+
+  // পারমিশন চেক করার হেল্পার ফাংশন
+  const hasAccess = (pageId: string) => user.allowedPages?.includes(pageId) || false;
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex">
+    <div className="min-h-screen bg-stone-950 text-stone-100 p-6 md:p-12 selection:bg-rose-500 selection:text-white">
       
-      {/* বাম পাশের সাইডবার (Sidebar) */}
-      <aside className="w-64 bg-stone-900 border-r border-stone-800 p-6 flex flex-col justify-between hidden md:flex">
+      {/* টপ হেডার বার */}
+      <div className="max-w-5xl mx-auto flex justify-between items-center border-b border-stone-800 pb-6 mb-8">
         <div>
-          <div className="mb-8">
-            <h2 className="text-sm font-bold tracking-wider text-rose-500 uppercase">WLC Panel</h2>
-            <p className="text-xs text-stone-400">ড্যাশবোর্ড কন্ট্রোল</p>
-          </div>
-
-          {/* রোল সিলেকশন ড্রপডাউন (শুধুমাত্র আপনার ডেভেলপমেন্ট বা টেস্টিং সুবিধার জন্য রাখা হয়েছে) */}
-          <div className="mb-6 p-3 bg-stone-950 rounded-xl border border-stone-800">
-            <label className="block text-[10px] text-stone-500 uppercase font-bold mb-1">Test Another Role:</label>
-            <select 
-              value={userRole} 
-              onChange={(e) => setUserRole(e.target.value as Role)}
-              className="bg-transparent text-xs text-stone-200 focus:outline-none w-full cursor-pointer"
-            >
-              <option value="Admin">1. Admin Panel</option>
-              <option value="Moderator">2. Data Entry / Mod</option>
-              <option value="Editorial">3. Editorial Panel</option>
-              <option value="Executive">4. Executive Panel</option>
-            </select>
-          </div>
-
-          <nav className="space-y-2 text-sm text-stone-400">
-            <div className="px-3 py-2 bg-stone-800 text-stone-200 rounded-lg font-medium">❖ Overview</div>
-            <div className="px-3 py-2 hover:bg-stone-800/40 hover:text-stone-300 rounded-lg cursor-pointer transition-colors">📋 Notices</div>
-            <div className="px-3 py-2 hover:bg-stone-800/40 hover:text-stone-300 rounded-lg cursor-pointer transition-colors">⚙️ Settings</div>
-          </nav>
+          <h1 className="text-xl font-bold tracking-tight text-white">{user.name} ভাই-এর ড্যাশবোর্ড</h1>
+          <p className="text-xs text-stone-400 mt-0.5">অফিশিয়াল মেম্বার পোর্টাল • WLC</p>
         </div>
+        <button 
+          onClick={() => { localStorage.removeItem("userSession"); router.push("/"); }} 
+          className="px-4 py-2 bg-stone-900 border border-stone-800 hover:border-rose-900/50 hover:text-rose-400 text-xs font-semibold rounded-xl transition-all"
+        >
+          Logout ➔
+        </button>
+      </div>
 
-        <div>
-          <div className="border-t border-stone-800 pt-4 mb-4">
-            <p className="text-xs font-semibold text-stone-300">{userName}</p>
-            <p className="text-[10px] text-rose-400/80 uppercase tracking-wider">{userRole}</p>
-          </div>
-          <Link href="https://wlc.pro.bd" className="text-xs text-stone-500 hover:text-stone-400 transition-colors">
-            ← Logout / Exit
-          </Link>
-        </div>
-      </aside>
-
-      {/* মেইন কনটেন্ট এরিয়া */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-        <header className="flex justify-between items-center mb-8 pb-4 border-b border-stone-900">
+      <div className="max-w-5xl mx-auto space-y-8">
+        
+        {/* ১. মেম্বারশিপ ও অ্যাডমিন ম্যানেজমেন্ট ক্যাটাগরি */}
+        {(hasAccess("member-input") || hasAccess("member-list") || hasAccess("approve") || hasAccess("member-form")) && (
           <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">স্বাগতম, {userName}!</h1>
-            <p className="text-xs text-stone-400 mt-1">প্যানেল রোল: <span className="text-rose-400 font-semibold">{userRole}</span></p>
-          </div>
-          <div className="text-right text-xs text-stone-500 hidden sm:block">
-            Willes Literary Club Dashboard v2.0
-          </div>
-        </header>
+            <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4">Management & Operations</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              
+              {hasAccess("member-input") && (
+                <Link href="/member-input" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/member-input</p>
+                  <p className="text-[10px] text-stone-500 mt-1">ম্যানুয়াল মেম্বার ডাটা এন্ট্রি</p>
+                </Link>
+              )}
 
-        {/* 🛠️ রোল অনুযায়ী ডাইনামিক ভিউ লোড করা হচ্ছে */}
-        <div className="animate-fade-in">
-          {userRole === "Admin" && <AdminView />}
-          {userRole === "Moderator" && <ModeratorView />}
-          {userRole === "Editorial" && <EditorialView />}
-          {userRole === "Executive" && <ExecutiveView />}
-        </div>
-      </main>
+              {hasAccess("member-list") && (
+                <Link href="/member-list" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/member-list</p>
+                  <p className="text-[10px] text-stone-500 mt-1">মেম্বার ডাটাবেজ তালিকা</p>
+                </Link>
+              )}
 
+              {hasAccess("approve") && (
+                <Link href="/approve" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/approve</p>
+                  <p className="text-[10px] text-stone-500 mt-1">প্যানেল রিকোয়েস্ট এপ্রুভাল পোর্টাল</p>
+                </Link>
+              )}
+
+              {hasAccess("member-form") && (
+                <Link href="/member-form" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/member-form</p>
+                  <p className="text-[10px] text-stone-500 mt-1">Google Form Response হাব</p>
+                </Link>
+              )}
+
+            </div>
+          </div>
+        )}
+
+        {/* ২. এডিটরিয়াল ডিপার্টমেন্ট ও কন্টেন্ট ক্যাটাগরি */}
+        {(hasAccess("editorial") || hasAccess("written") || hasAccess("spoken") || hasAccess("adobe-assets") || hasAccess("canva") || hasAccess("pngs")) && (
+          <div>
+            <h3 className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-4">Editorial & Creative Studio</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+              {hasAccess("editorial") && (
+                <Link href="/editorial" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block md:col-span-1">
+                  <p className="text-xs font-bold text-rose-400">/editorial</p>
+                  <p className="text-[10px] text-stone-500 mt-1">মূল এডিটরিয়াল প্যারেন্ট হাব</p>
+                </Link>
+              )}
+
+              {hasAccess("written") && (
+                <Link href="/editorial/written" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/written</p>
+                  <p className="text-[10px] text-stone-500 mt-1">লিখিত কন্টেন্ট ও ড্রাফট</p>
+                </Link>
+              )}
+
+              {hasAccess("spoken") && (
+                <Link href="/editorial/spoken" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/spoken</p>
+                  <p className="text-[10px] text-stone-500 mt-1">বাচনভঙ্গি ও স্পোকেন সোর্স</p>
+                </Link>
+              )}
+
+              {hasAccess("canva") && (
+                <Link href="/editorial/canva" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-amber-500">/canva</p>
+                  <p className="text-[10px] text-stone-500 mt-1">ক্যানভা টেমপ্লেট ও শেয়ার লিংক</p>
+                </Link>
+              )}
+
+              {hasAccess("pngs") && (
+                <Link href="/editorial/pngs" className="p-4 bg-stone-900 border border-stone-800/80 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/pngs</p>
+                  <p className="text-[10px] text-stone-500 mt-1">ট্রান্সপারেন্ট পিএনজি ও ওভারলে</p>
+                </Link>
+              )}
+
+            </div>
+          </div>
+        )}
+
+        {/* ৩. অ্যাডোবি স্পেসিফিক অ্যাসেটস (সাব-রুটস) */}
+        {(hasAccess("adobe-assets") || hasAccess("photoshop") || hasAccess("illustrator")) && (
+          <div className="bg-stone-900/40 border border-stone-800 rounded-2xl p-5">
+            <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">Adobe Creative Suite</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              
+              {hasAccess("adobe-assets") && (
+                <Link href="/editorial/adobe-assets" className="p-3.5 bg-stone-950 border border-stone-800 rounded-xl hover:border-blue-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-300">/adobe-assets</p>
+                  <p className="text-[10px] text-stone-500 mt-0.5">সব অ্যাডোবি সোর্স প্রজেক্ট</p>
+                </Link>
+              )}
+
+              {hasAccess("photoshop") && (
+                <Link href="/editorial/adobe-assets/photoshop" className="p-3.5 bg-stone-950 border border-stone-800 rounded-xl hover:border-blue-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-300">/photoshop (PSDs)</p>
+                  <p className="text-[10px] text-stone-500 mt-0.5">ফটোশপ র ফাইল ও ড্রাফটস</p>
+                </Link>
+              )}
+
+              {hasAccess("illustrator") && (
+                <Link href="/editorial/adobe-assets/illustrator" className="p-3.5 bg-stone-950 border border-stone-800 rounded-xl hover:border-blue-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-300">/illustrator (AIs)</p>
+                  <p className="text-[10px] text-stone-500 mt-0.5">ভেক্টর ও ইলাস্ট্রেটর ডিজাইন</p>
+                </Link>
+              )}
+
+            </div>
+          </div>
+        )}
+
+        {/* ৪. এআই টুলস ও কমিউনিকেশন */}
+        {(hasAccess("sahitto-ai") || hasAccess("chat")) && (
+          <div>
+            <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-4">Intelligence & Discussion</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {hasAccess("sahitto-ai") && (
+                <Link href="/Sahitto-AI" className="p-5 bg-gradient-to-br from-stone-900 to-rose-950/20 border border-rose-900/30 rounded-xl hover:border-rose-700/60 transition-all block group">
+                  <p className="text-xs font-bold text-stone-100 group-hover:text-rose-400 transition-colors">/Sahitto-AI 🌟</p>
+                  <p className="text-[10px] text-stone-400 mt-1">WLC কাস্টম সাহিত্য ও স্ক্রিপ্ট রাইটিং এআই মডেল</p>
+                </Link>
+              )}
+
+              {hasAccess("chat") && (
+                <Link href="/chat" className="p-5 bg-stone-900 border border-stone-800 rounded-xl hover:border-rose-900/40 transition-all block">
+                  <p className="text-xs font-bold text-stone-200">/chat 💬</p>
+                  <p className="text-[10px] text-stone-500 mt-1">অভ্যন্তরীণ প্যানেল মেম্বারদের রিয়েল-টাইম চ্যাট রুম</p>
+                </Link>
+              )}
+
+            </div>
+          </div>
+        )}
+
+        {/* কোনো পারমিশন না থাকলে */}
+        {(!user.allowedPages || user.allowedPages.length === 0) && (
+          <div className="text-xs text-stone-500 text-center py-12 border border-dashed border-stone-800 rounded-2xl">
+            আপনাকে এখনও কোনো পেজের অ্যাক্সেস দেওয়া হয়নি ভাই। এডমিনের সাথে যোগাযোগ করুন।
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
