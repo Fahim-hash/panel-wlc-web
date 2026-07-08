@@ -1,3 +1,4 @@
+// app/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -11,7 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(''); // এরর মেসেজ দেখানোর জন্য স্টেট
+  const [error, setError] = useState(''); 
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,12 +20,16 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
+    // 📧 কেস-সেন্সিটিভ ইস্যু এড়াতে ইমেইল লোয়ারকেস ও ট্রিম করে নেওয়া হলো
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanPassword = password.trim();
+
     try {
-      // 🔑 Firestore-এ ইমেইল, পাসওয়ার্ড এবং 'approved' স্ট্যাটাস চেক করার কুয়েরি
+      // 🔑 Firestore কুয়েরি
       const q = query(
         collection(db, "panel_requests"),
-        where("email", "==", email.trim()),
-        where("password", "==", password.trim()),
+        where("email", "==", cleanEmail),
+        where("password", "==", cleanPassword),
         where("status", "==", "approved")
       );
 
@@ -33,16 +38,20 @@ export default function LoginPage() {
       if (!querySnapshot.empty) {
         // মেম্বার ম্যাচ করেছে
         const memberDoc = querySnapshot.docs[0].data();
+
+        // 💾 সেশনে ডেটা ধরে রাখার জন্য লোকালস্টোরেজে ডাটা সেভ
+        localStorage.setItem("userRole", memberDoc.position || ""); 
+        localStorage.setItem("userName", memberDoc.name || "");
+        localStorage.setItem("userEmail", memberDoc.email || "");
         
-        // সেশনে ডেটা ধরে রাখার জন্য লোকালস্টোরেজে ডাটা সেভ করা
-        localStorage.setItem("userRole", memberDoc.position); 
-        localStorage.setItem("userName", memberDoc.name);
-        localStorage.setItem("userEmail", memberDoc.email);
+        // 🛡️ এইটাই আসল ট্রিক! allowedPages অ্যারেটিকে স্ট্রিং বানিয়ে লোকালস্টোরেজে রাখা হচ্ছে
+        // যদি ডাটাবেজে কোনো কারণে অ্যারে না থাকে, তবে ডিফল্ট খালি অ্যারে [] সেভ হবে
+        const pagesArray = memberDoc.allowedPages || [];
+        localStorage.setItem("allowedPages", JSON.stringify(pagesArray));
 
         // সফল লগইন হলে ড্যাশবোর্ডে রিডাইরেক্ট
         router.push("/dashboard");
       } else {
-        // ডেটা না মিললে বা রিকোয়েস্ট পেন্ডিং থাকলে
         setError("ভুল ইমেইল/পাসওয়ার্ড অথবা অ্যাকাউন্টটি এখনও অ্যাপ্রুভ করা হয়নি ভাই!");
       }
     } catch (err) {
@@ -56,14 +65,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-stone-900 flex flex-col justify-center items-center p-4 relative overflow-hidden selection:bg-rose-500 selection:text-white">
 
-      {/* 🌌 Background Decorative Radial Glows (Testing Setup UI) */}
+      {/* Background Decorative Radial Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-rose-900/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-amber-600/10 blur-[120px] pointer-events-none" />
 
-      {/* 📦 Main Login Card Container */}
+      {/* Main Login Card Container */}
       <div className="w-full max-w-md bg-stone-950/40 backdrop-blur-xl border border-stone-800/80 rounded-3xl p-6 md:p-8 shadow-2xl relative z-10 transition-all">
 
-        {/* 🏷️ Header Block: Logo & Subtitle */}
+        {/* Header Block: Logo & Subtitle */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative w-14 h-14 mb-3 transition-transform duration-300 hover:scale-105">
             <Image 
@@ -81,14 +90,14 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* ⚠️ এরর মেসেজ বক্স (ডিজাইনের সাথে ম্যাচ করে সুন্দর বর্ডার ও গ্লো দেওয়া হয়েছে) */}
+        {/* এরর মেসেজ বক্স */}
         {error && (
           <div className="bg-rose-950/30 border border-rose-900/40 text-rose-400 text-xs p-3 rounded-xl mb-5 text-center animate-fade-in font-medium">
             {error}
           </div>
         )}
 
-        {/* 📝 Login Form */}
+        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Email Input Field */}
@@ -126,7 +135,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* 🔘 Submit Button */}
+          {/* Submit Button */}
           <button 
             type="submit"
             disabled={isLoading}
@@ -146,7 +155,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* 🔒 Footer Security Note */}
+        {/* Footer Security Note */}
         <div className="mt-6 pt-4 border-t border-stone-900 text-center">
           <p className="text-[10px] text-stone-500 font-mono tracking-tight">
             SECURE PROTECTED PORTAL
