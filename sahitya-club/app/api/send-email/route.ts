@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 // সরাসরি সোর্স কোডেই এপিআই কি বসানো হলো
-const resend = new Resend('Re_ayh39KGt_C14e4xe5p3QHY645qxJnvxGk');
+const resend = new re_SNiDeURm_72PpnQs35xQ7y2wmfy9KmbXa;
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await resend.emails.send({
       // আপনার ভেরিফাইড ডোমেইন wlc.pro.bd ব্যবহার করা হলো
-      from: 'WLC Admin Bot <admin@wlc.pro.bd>', 
+      from: 'WLC Admin Bot <test@maya.apu.bd>', 
       to: [toEmail.trim()],
       subject: 'WLC Internal Panel Portal - অ্যাকাউন্ট অ্যাপ্রুভাল নোটিশ! 🎉',
       html: `
