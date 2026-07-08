@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
 // সরাসরি সোর্স কোডেই এপিআই কি বসানো হলো
-const resend = new re_SNiDeURm_72PpnQs35xQ7y2wmfy9KmbXa;
+const resend = new ('re_SNiDeURm_72PpnQs35xQ7y2wmfy9KmbXa');
 
 export async function POST(request: Request) {
   try {
