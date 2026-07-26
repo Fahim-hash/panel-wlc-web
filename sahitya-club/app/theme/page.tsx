@@ -9,13 +9,24 @@ export default function ThemeShowcasePage() {
   const [activeTab, setActiveTab] = useState<"website" | "panel">("website");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const colors = [
+  // 🌐 Main Website Colors (Light)
+  const websiteColors = [
     { name: "Primary Rose", hex: "#9F1239", tailwind: "bg-rose-800", text: "text-white" },
     { name: "Secondary Rose", hex: "#BE123C", tailwind: "bg-rose-700", text: "text-white" },
     { name: "Deep Stone", hex: "#1C1917", tailwind: "bg-stone-900", text: "text-white" },
     { name: "Muted Gray", hex: "#6B7280", tailwind: "bg-gray-500", text: "text-white" },
     { name: "Background Light", hex: "#FAFAFA", tailwind: "bg-[#FAFAFA]", text: "text-gray-800" },
     { name: "Pure White", hex: "#FFFFFF", tailwind: "bg-white", text: "text-gray-800" },
+  ];
+
+  // 🔐 Internal Panel Colors (Dark)
+  const panelColors = [
+    { name: "Dark Base (Bg)", hex: "#1C1917", tailwind: "bg-stone-900", text: "text-stone-300" },
+    { name: "Glass Card Base", hex: "#0C0A09", tailwind: "bg-stone-950/80", text: "text-stone-300" },
+    { name: "Primary Accent", hex: "#BE123C", tailwind: "bg-rose-700", text: "text-white" },
+    { name: "Deep Accent", hex: "#881337", tailwind: "bg-rose-900", text: "text-white" },
+    { name: "Glow Ambient", hex: "#D97706", tailwind: "bg-amber-600", text: "text-white" },
+    { name: "Card Border", hex: "#2C2826", tailwind: "bg-stone-800", text: "text-stone-300" },
   ];
 
   const copyToClipboard = (key: string, value: string) => {
@@ -76,7 +87,7 @@ export default function ThemeShowcasePage() {
           <section className="mb-16">
             <h2 className="text-xl font-bold font-serif text-gray-900 mb-6 border-l-4 border-rose-800 pl-3">১. কালার প্যালেট (Brand Colors)</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-              {colors.map((color, idx) => (
+              {websiteColors.map((color, idx) => (
                 <div key={idx} className="bg-white border border-gray-200 rounded-2xl p-3 shadow-sm">
                   <div className={`w-full aspect-square rounded-xl mb-3 ${color.tailwind} flex items-end p-2`}>
                     <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 bg-black/20 backdrop-blur-sm rounded ${color.text}`}>
@@ -184,9 +195,27 @@ export default function ThemeShowcasePage() {
             </p>
           </div>
 
-          {/* Components Showcase */}
+          {/* 🎨 ১. ইন্টারনাল কালার প্যালেট */}
+          <div className="bg-stone-950/60 backdrop-blur-xl border border-stone-800/80 rounded-3xl p-6 shadow-2xl relative z-10 space-y-4">
+            <h2 className="text-sm font-bold text-rose-400 uppercase tracking-wider">01. Panel Color Palette</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+              {panelColors.map((color, idx) => (
+                <div key={idx} className="bg-stone-900/90 border border-stone-800 rounded-2xl p-3 shadow-sm">
+                  <div className={`w-full aspect-square rounded-xl mb-3 ${color.tailwind} border border-stone-700/50 flex items-end p-2`}>
+                    <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 bg-black/40 backdrop-blur-sm rounded ${color.text}`}>
+                      {color.hex}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-xs text-stone-200 truncate">{color.name}</h3>
+                  <p className="text-[10px] text-stone-500 font-mono mt-0.5 truncate">{color.tailwind}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 🧪 ২. প্রিভিউ কমপোনেন্টস */}
           <div className="bg-stone-950/60 backdrop-blur-xl border border-stone-800/80 rounded-3xl p-6 shadow-2xl relative z-10 space-y-6">
-            <h2 className="text-sm font-bold text-rose-400 uppercase tracking-wider">Live Panel Components Preview</h2>
+            <h2 className="text-sm font-bold text-rose-400 uppercase tracking-wider">02. Live Panel Components Preview</h2>
             
             <div className="grid md:grid-cols-2 gap-6">
               {/* Form Controls */}
@@ -208,9 +237,9 @@ export default function ThemeShowcasePage() {
             </div>
           </div>
 
-          {/* Token Code Dictionary */}
+          {/* 🏷️ ৩. টোকেন কোড ডিকশনারি */}
           <div className="bg-stone-950/60 backdrop-blur-xl border border-stone-800/80 rounded-3xl p-6 shadow-2xl relative z-10 space-y-4">
-            <h2 className="text-sm font-bold text-rose-400 uppercase tracking-wider">Reusable Token Classes (`@/lib/theme`)</h2>
+            <h2 className="text-sm font-bold text-rose-400 uppercase tracking-wider">03. Reusable Token Classes (`@/lib/theme`)</h2>
             <div className="space-y-3 font-mono text-xs">
               {Object.entries(WLC_THEME).map(([key, value]) => (
                 <div key={key} className="flex flex-col sm:flex-row sm:items-center justify-between bg-stone-900/80 border border-stone-800/80 p-3 rounded-xl gap-2 hover:border-rose-900/50 transition-colors">
